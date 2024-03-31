@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="D:/test_data.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="125"/><column_width id="3" width="1392"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,8:mainEmployee"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Employee" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="120"/><column index="2" value="103"/><column index="3" value="99"/><column index="4" value="96"/><column index="5" value="143"/><column index="6" value="158"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="Main">select * from salary;
+
+select e.*, s.id, s.employee_id, s.salary, s.disbursement_date from employee e, salary s where e.EMPLOYEE_ID=s.employee_id;
+
+
+UPDATE salary set  salary= replace(salary, ',','');
+
+--2
+SELECT strftime('%Y-%m', disbursement_date) AS month,
+       AVG(salary) AS average_salary
+FROM salary
+GROUP BY month
+ORDER BY month;
+
+--3
+SELECT
+    e.first_name || ' ' || e.last_name AS full_name,
+    e.Phone_Number, s.salary
+FROM
+    employee e 
+JOIN
+    salary s ON e.employee_id = s.employee_id
+WHERE
+    s.salary&gt;100000 group by e.first_name || ' ' || e.last_name;
+
+	
+
+--4.1
+SELECT 
+    employee_id,
+    MAX(CASE WHEN year = 2012 THEN annual_salary END) AS AnnualSalary_2012,
+    MAX(CASE WHEN year = 2013 THEN annual_salary END) AS AnnualSalary_2013,
+    MAX(CASE WHEN year = 2014 THEN annual_salary END) AS AnnualSalary_2014,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as AnnualIncrement_In2years
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+HAVING AnnualSalary_2014 &gt; AnnualSalary_2012
+ORDER BY employee_id;
+
+--4.2
+SELECT AVG(AnnualIncrement_In2years) AS Average_Incement FROM (
+SELECT 
+    employee_id,
+    MAX(CASE WHEN year = 2012 THEN annual_salary END) AS AnnualSalary_2012,
+    MAX(CASE WHEN year = 2013 THEN annual_salary END) AS AnnualSalary_2013,
+    MAX(CASE WHEN year = 2014 THEN annual_salary END) AS AnnualSalary_2014,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as AnnualIncrement_In2years
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+HAVING AnnualSalary_2014 &gt; AnnualSalary_2012
+ORDER BY employee_id);
+
+--5 
+
+SELECT
+    employee_id,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2013 THEN annual_salary END)  as Increment_2014,
+	MAX(CASE WHEN year = 2013 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as Increment_2013
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id 
+ORDER BY employee_id;
+
+
+SELECT AVG(Increment_2014) as Avg_increment_2014, AVG(Increment_2013) as Avg_increment_2013 FROM(
+SELECT
+    employee_id,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2013 THEN annual_salary END)  as Increment_2014,
+	MAX(CASE WHEN year = 2013 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as Increment_2013
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id 
+ORDER BY employee_id
+);
+
+</sql><sql name="SQL 1">select * from salary;
+
+select e.*, s.id, s.employee_id, s.salary, s.disbursement_date from employee e, salary s where e.EMPLOYEE_ID=s.employee_id;
+
+
+UPDATE salary set  salary= replace(salary, ',','');
+
+--2
+SELECT strftime('%Y-%m', disbursement_date) AS month,
+       AVG(salary) AS average_salary
+FROM salary
+GROUP BY month
+ORDER BY month;
+
+--3
+SELECT
+    e.first_name || ' ' || e.last_name AS full_name,
+    e.Phone_Number, s.salary
+FROM
+    employee e 
+JOIN
+    salary s ON e.employee_id = s.employee_id
+WHERE
+    s.salary&gt;100000 group by e.first_name || ' ' || e.last_name;
+	
+
+
+--4.1 practice
+SELECT DISTINCT employee_id
+FROM(
+	SELECT
+    e.employee_id,
+    strftime('%Y', s.disbursement_date) AS year,
+    s.salary,
+    LEAD(s.salary, 1) OVER (PARTITION BY e.employee_id ORDER BY strftime('%Y', s.disbursement_date) DESC) AS salary_2013,
+    LEAD(s.salary, 2) OVER (PARTITION BY e.employee_id ORDER BY strftime('%Y', s.disbursement_date) DESC) AS salary_2012
+	FROM Employee e JOIN salary s ON e.employee_id = s.employee_id)
+WHERE salary&gt;salary_2013 or salary&gt;salary_2012;
+
+SELECT employee_id from salary GROUP by employee_id HAVING max(salary)- min(salary)&gt;
+
+SELECT employee_id, CAST(max(salary) AS NUMERIC) - CAST(min(salary) As NUMERIC) AS INCEREMENT from salary GROUP by employee_id;
+
+SELECT employee_id, Max(CAST (salary AS NUMERIC))- min(CAST(salary As NUMERIC)) AS INCEREMENT from salary GROUP by employee_id;
+
+SELECT employee_id, max(salary), min(salary) from salary GROUP by employee_id;
+
+SELECT employee_id, max(salary)-min(salary) as increment, max(salary), min(salary), ((max(salary)- min(salary))*100)/min(salary) as percent_increment from salary GROUP by employee_id;
+
+select avg(increment) from
+(select (max(salary)-min(salary)) as increment from salary group by employee_id having max(salary)-min(salary)&gt;0);
+
+select employee_id, max(salary)-min(salary) as increment from salary group by employee_id having max(salary)-min(salary)&gt;0;
+
+select max(salary)-min(salary)) as increment from salary group by employee_id having max(salary)-min(salary)&gt;0
+
+select employee_id, max(salary)-min(salary) as increment, strftime('%Y', disbursement_date) AS year from salary group by employee_id, year;
+
+alter table salary add COLUMN salary_new INTEGER;
+UPDATE salary set salary_new = salary;
+SELECT * from salary;
+alter table salary drop column salary;
+
+alter table salary rename column salary_new to salary;
+
+SELECT employee_id, ((max(salary)- min(salary))/min(salary))*100 as avgerage_increment from salary GROUP by employee_id;
+
+UPDATE salary set  salary= replace(salary, ',','');
+
+select
+    e.employee_id,
+    strftime('%Y', s.disbursement_date) AS year,
+    s.salary,
+    LEAD(s.salary, 1) OVER (PARTITION BY e.employee_id ORDER BY strftime('%Y', s.disbursement_date) DESC) AS salary_2013,
+    LEAD(s.salary, 2) OVER (PARTITION BY e.employee_id ORDER BY strftime('%Y', s.disbursement_date) DESC) AS salary_2012
+	
+FROM Employee e JOIN salary s ON e.employee_id = s.employee_id group by e.employee_id, year;
+
+SELECT
+    e.employee_id,
+    e.first_name || ' ' || e.last_name AS full_name,
+    AVG(s.salary) AS avg_increment_per_year
+FROM
+    employee e
+JOIN
+    salary s ON e.employee_id = s.employee_id
+GROUP BY
+    e.employee_id, strftime('%Y', s.disbursement_date);
+	
+WITH SalaryWithPrevious AS (
+    SELECT
+        e.employee_id,
+        s.salary,
+        LAG(s.salary) OVER (PARTITION BY e.employee_id ORDER BY s.disbursement_date) AS prev_salary,
+        strftime('%Y', s.disbursement_date) AS year
+    FROM
+        Employee e
+    JOIN
+        Salary s ON e.employee_id = s.employee_id
+)
+SELECT
+    employee_id,
+    AVG(salary - prev_salary) AS avg_increment_per_year
+FROM
+    SalaryWithPrevious
+WHERE
+    prev_salary IS NOT NULL
+GROUP BY
+    employee_id, year;
+
+
+WITH SalaryWithIncrement AS (
+    SELECT
+        e.employee_id,
+        s.salary,
+        LAG(s.salary) OVER (PARTITION BY e.employee_id ORDER BY s.disbursement_date) AS prev_salary,
+        strftime('%Y', s.disbursement_date) AS year
+    FROM
+        Employee e
+    JOIN
+        Salary s ON e.employee_id = s.employee_id
+)
+SELECT year, avg(increment) 
+FROM (
+	SELECT
+    employee_id, year, 
+	max(salary)-min(prev_salary) as increment
+    --AVG(salary - prev_salary) AS avg_increment_per_year
+    FROM
+    SalaryWithIncrement
+WHERE
+    prev_salary IS NOT NULL
+GROUP BY
+    employee_id, year)
+group by year;
+
+select employee_id, max(salary)-min(salary) as increment from salary group by employee_id having max(salary)-min(salary)&gt;0;
+
+
+select avg(increment) from
+(select (max(salary)-min(salary)) as increment from salary group by employee_id having max(salary)-min(salary)&gt;0);
+</sql><sql name="SQL 3">alter table salary add COLUMN salary_new REAL;
+UPDATE salary set salary_new = salary;
+
+SELECT
+    e.first_name || ' ' || e.last_name AS full_name,
+    e.Phone_Number, s.salary
+FROM
+    employee e 
+JOIN
+    salary s ON e.employee_id = s.employee_id
+WHERE
+    s.salary_new&gt;100000 group by e.first_name || ' ' || e.last_name;
+	
+select employee_id, max(salary_new)-min(salary_new) as increment from salary group by employee_id having max(salary_new)-min(salary_new)&gt;0;
+SELECT DISTINCT salary_new, salary from salary;
+
+select avg(increment) from
+(select (max(salary_new)-min(salary_new)) as increment from salary group by employee_id having max(salary_new)-min(salary_new)&gt;0);
+
+--5
+
+WITH SalaryWithIncrement AS (
+    SELECT
+        e.employee_id,
+        s.salary,
+        LAG(s.salary_new) OVER (PARTITION BY e.employee_id ORDER BY s.disbursement_date) AS prev_salary,
+        strftime('%Y', s.disbursement_date) AS year
+    FROM
+        Employee e
+    JOIN
+        Salary s ON e.employee_id = s.employee_id
+)
+
+SELECT year, avg(increment) 
+FROM (
+	SELECT
+    employee_id, year, 
+	max(salary)-min(prev_salary) as increment
+    FROM
+    SalaryWithIncrement
+WHERE
+    prev_salary IS NOT NULL
+GROUP BY
+    employee_id, year)
+group by year;
+
+alter table salary drop column salary;
+alter table salary rename column salary_new to salary;
+
+SELECT employee_id, CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year, SUM(CAST(salary) AS INTEGER) AS annual_salary
+FROM salary GROUP BY employee_id, yearORDER BY employee_id, year;
+
+--hardik
+SELECT employee_id, strftime('%Y', disbursement_date) AS year, SUM(salary) AS annual_salary
+FROM salary GROUP BY employee_id, year ORDER BY employee_id, year;
+
+
+
+SELECT
+    employee_id,
+    MAX(CASE WHEN year = 2012 THEN annual_salary END) AS salary_2012,
+    MAX(CASE WHEN year = 2013 THEN annual_salary END) AS salary_2013,
+    MAX(CASE WHEN year = 2014 THEN annual_salary END) AS salary_2014
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM salary
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+ORDER BY employee_id;
+
+
+-- For Every Year Increment i.e., increment has happended from 2012 to 2013 and from 2013 to 2014.
+
+SELECT 
+    employee_id,
+    MAX(CASE WHEN year = 2012 THEN annual_salary END) AS salary_2012,
+    MAX(CASE WHEN year = 2013 THEN annual_salary END) AS salary_2013,
+    MAX(CASE WHEN year = 2014 THEN annual_salary END) AS salary_2014
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+HAVING salary_2014 &gt; salary_2013 and salary_2013&gt;salary_2012
+ORDER BY employee_id;
+
+
+--for Increment in any phase like either from 2012 to 2013 or 2013 to 2014. It will be counted as valid.
+
+SELECT 
+    employee_id,
+    MAX(CASE WHEN year = 2012 THEN annual_salary END) AS salary_2012,
+    MAX(CASE WHEN year = 2013 THEN annual_salary END) AS salary_2013,
+    MAX(CASE WHEN year = 2014 THEN annual_salary END) AS salary_2014
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+HAVING salary_2014 &gt; salary_2012
+ORDER BY employee_id;
+
+
+
+/*SELECT employee_id, avg(increment)
+FROM (
+    SELECT ((salary_2014) - (salary_2013) - (salary_2012)) as increment
+    FROM (
+        SELECT 
+            employee_id,
+            MAX(CASE WHEN year = 2012 THEN annual_salary END) AS salary_2012,
+            MAX(CASE WHEN year = 2013 THEN annual_salary END) AS salary_2013,
+            MAX(CASE WHEN year = 2014 THEN annual_salary END) AS salary_2014
+        FROM (
+            SELECT
+                employee_id,
+                CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+                SUM(salary) AS annual_salary
+            FROM SALARY
+            GROUP BY employee_id, year
+        )
+    ) AS SalarySummary
+    FROM salary
+)
+GROUP BY employee_id
+HAVING salary_2014 &gt; salary_2012
+ORDER BY employee_id;
+
+
+*/
+SELECT employee_id, (salary_2014 - salary_2013) AS increment_2014,(salary_2013 - salary_2012) as  increment_2013
+    FROM (
+        SELECT 
+            employee_id,
+            MAX(CASE WHEN year = 2012 THEN annual_salary END) AS salary_2012,
+            MAX(CASE WHEN year = 2013 THEN annual_salary END) AS salary_2013,
+            MAX(CASE WHEN year = 2014 THEN annual_salary END) AS salary_2014
+        FROM (
+            SELECT
+                employee_id,
+                CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+                SUM(salary) AS annual_salary
+            FROM SALARY
+            GROUP BY employee_id, year
+        ) AS SalarySummary
+    )
+    WHERE salary_2014 &gt; salary_2012
+GROUP BY employee_id;</sql><sql name="SQL 4">SELECT 
+    employee_id,
+    MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as increment
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+HAVING salary_2014 &gt; salary_2012
+ORDER BY employee_id;
+
+SELECT AVG(AnnualIncrement_In2years) AS Average_AnnualIncement FROM (
+SELECT 
+    employee_id,
+    MAX(CASE WHEN year = 2012 THEN annual_salary END) AS AnnualSalary_2012,
+    MAX(CASE WHEN year = 2013 THEN annual_salary END) AS AnnualSalary_2013,
+    MAX(CASE WHEN year = 2014 THEN annual_salary END) AS AnnualSalary_2014,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as AnnualIncrement_In2years
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+HAVING AnnualSalary_2014 &gt; AnnualSalary_2012
+ORDER BY employee_id);
+
+SELECT 
+    employee_id,
+    MAX(CASE WHEN year = 2012 THEN annual_salary END) AS AnnualSalary_2012,
+    MAX(CASE WHEN year = 2013 THEN annual_salary END) AS AnnualSalary_2013,
+    MAX(CASE WHEN year = 2014 THEN annual_salary END) AS AnnualSalary_2014,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as AnnualIncrement_In2years
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+HAVING AnnualSalary_2014 &gt; AnnualSalary_2012
+ORDER BY employee_id;</sql><sql name="SQL 5">SELECT AVG(Increment_2014) as Avg_increment_2014, AVG(AnnualSalary_2014) as Avg_increment_2014 FROM(
+SELECT
+    employee_id,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2013 THEN annual_salary END)  as Increment_2014
+	MAX(CASE WHEN year = 2013 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as Increment_2013
+
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id
+HAVING AnnualSalary_2014 &gt; AnnualSalary_2012
+ORDER BY employee_id
+);</sql><sql name="SQL 6">SELECT
+    employee_id,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2013 THEN annual_salary END)  as Increment_2014,
+	MAX(CASE WHEN year = 2013 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as Increment_2013
+
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id HAVING Increment_2014 &gt; 0 and Increment_2013 &gt; 0
+ORDER BY employee_id;
+
+
+
+
+SELECT AVG(Increment_2014) as Avg_increment_2014, AVG(Increment_2013) as Avg_increment_2013 FROM(
+SELECT
+    employee_id,
+	MAX(CASE WHEN year = 2014 THEN annual_salary END) - MAX(CASE WHEN year = 2013 THEN annual_salary END)  as Increment_2014,
+	MAX(CASE WHEN year = 2013 THEN annual_salary END) - MAX(CASE WHEN year = 2012 THEN annual_salary END)  as Increment_2013
+
+FROM (
+    SELECT
+        employee_id,
+        CAST(strftime('%Y', disbursement_date) AS INTEGER) AS year,
+        SUM(salary) AS annual_salary
+    FROM SALARY
+    GROUP BY employee_id, year
+) AS SalarySummary
+GROUP BY employee_id 
+ORDER BY employee_id
+);</sql><current_tab id="0"/></tab_sql></sqlb_project>
